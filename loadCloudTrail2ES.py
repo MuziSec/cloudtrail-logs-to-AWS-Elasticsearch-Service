@@ -126,14 +126,19 @@ def lambda_handler(event, context):
     gzfile = gzip.open(s3obj.name, "r")
 
     # loads contents of the Records key into variable (our actual cloudtrail log entries!)
-    response = json.loads(gzfile.readlines()[0])
+    success=True
+    try:
+        # sometimes objects are empty. This handles that.
+        response = json.loads(gzfile.readlines()[0])
+    except:
+        success=False
 
     """ I do dumb stuff in my account and I have more than just CloudTrail
         in my S3 bucket. There's CloudTrail Digests, and some Config snapshots
         that drop in as well. So if I see an S3 object and it isn't a CloudTrail
         message, I figure that out here and ignore it.
     """
-    if( "Records" not in response ):
+    if( success == False or ("Records" not in response) ):
         # print( "Not CloudTrail. Skipping." )
         return
 
